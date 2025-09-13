@@ -105,6 +105,7 @@
       <div class="container">
         <label id="header"></label> <br /><br />
         <form>
+          <!-- Order Number -->
           <label id="lOrderNumber"></label><br />
           <input
             class="input"
@@ -117,6 +118,18 @@
           />
           <div id="rOrderNumber" class="result"></div>
 
+          <!-- ✅ Email Field -->
+          <label id="lemail"></label><br />
+          <input
+            class="input"
+            id="email"
+            type="email"
+            name="email"
+            required
+          />
+          <div id="remail" class="result"></div>
+
+          <!-- Issue -->
           <label id="lIssue"></label><br />
           <input
             class="input"
@@ -129,11 +142,12 @@
           />
           <div id="rIssue" class="result"></div>
 
+          <!-- Items -->
           <label id="lChooseItem"></label><br />
           <div class="checkbox-group" id="itemCheckboxGroup"></div>
           <div id="rItems" class="result"></div>
 
-          <!-- ✅ Date Picker -->
+          <!-- Date Picker -->
           <label id="lDate"></label><br />
           <input
             class="input"
@@ -144,12 +158,12 @@
           />
           <div id="rDate" class="result"></div>
 
+          <!-- Description -->
           <label id="lDescription"></label><br />
           <input
             class="input"
             id="description"
             type="text"
-            value=""
             name="description"
             required
           />
@@ -167,11 +181,13 @@
       var orderNumber = params.get("orderNumber");
       var issue = params.get("issue");
       var items = params.get("items");
+      var email = params.get("email");
       var description = params.get("description");
       var date = params.get("date");
 
       document.getElementById("orderNumber").setAttribute("value", orderNumber || "");
       document.getElementById("issue").setAttribute("value", issue || "");
+      if (email) document.getElementById("email").setAttribute("value", email);
       if (date) document.getElementById("datePicker").setAttribute("value", date);
 
       // ✅ Dynamic checkbox creation
@@ -204,8 +220,8 @@
       createCheckboxes(selectedFromUrl);
 
       // ✅ Populate view mode if already submitted
-      if (orderNumber && issue && items && description && date) {
-        showSummary({ orderNumber, issue, items: items.split(","), description, date });
+      if (orderNumber && issue && items && description && date && email) {
+        showSummary({ orderNumber, issue, items: items.split(","), description, date, email });
       }
 
       // ✅ Language setup
@@ -213,20 +229,25 @@
         document.getElementById("header").innerHTML =
           "Lengkapi informasi berikut untuk melaporkan masalah.";
         document.getElementById("lOrderNumber").innerHTML = "Nomor Pesanan:";
+        document.getElementById("lemail").innerHTML = "Email Aktif:";
+        document.getElementById("email").setAttribute("placeholder", "Email Aktif");
+
         document.getElementById("lIssue").innerHTML = "Masalah:";
         document.getElementById("lChooseItem").innerHTML =
           "Pilih barang yang belum diterima:";
-        document.getElementById("lDate").innerHTML ="Pilih Tangal Kedaluwarsa (Cek kemasan produk, ya)";
+        document.getElementById("lDate").innerHTML ="Pilih Tanggal Kedaluwarsa (Cek kemasan produk, ya)";
         document.getElementById("lDescription").innerHTML = "Jelaskan Masalah:";
         document.getElementById("submit").innerHTML = "Kirim";
       } else {
         document.getElementById("header").innerHTML =
           "Please share the following information to report an issue.";
         document.getElementById("lOrderNumber").innerHTML = "Order Number:";
+        document.getElementById("email").setAttribute("placeholder", "Active Email ID");
+        document.getElementById("lemail").innerHTML = "Active Email ID:";
         document.getElementById("lIssue").innerHTML = "Issue:";
         document.getElementById("lChooseItem").innerHTML =
           "Choose items not yet received:";
-        document.getElementById("lDate").innerHTML = "Select the expired date (Check the product packaging)";
+        document.getElementById("lDate").innerHTML = "Select the expiry date (Check the product packaging)";
         document.getElementById("lDescription").innerHTML =
           "Tell us what’s going on:";
         document.getElementById("submit").innerHTML = "Submit";
@@ -238,11 +259,16 @@
 
         const orderNum = document.getElementById("orderNumber").value;
         const selectedIssue = document.getElementById("issue").value;
+        const emailValue = document.getElementById("email").value.trim();
         const checkboxes = document.querySelectorAll('input[name="items"]:checked');
         const selectedItems = Array.from(checkboxes).map((cb) => cb.value);
         const selectedDate = document.getElementById("datePicker").value;
         const problemDescription = document.getElementById("description").value.trim();
 
+        if (!emailValue) {
+          alert("Please enter a valid email");
+          return;
+        }
         if (selectedItems.length === 0) {
           alert("Please select at least one item");
           return;
@@ -255,6 +281,7 @@
         const urlParams = new URLSearchParams();
         urlParams.set("orderNumber", orderNum);
         urlParams.set("issue", selectedIssue);
+        urlParams.set("email", emailValue);
         urlParams.set("items", selectedItems.join(","));
         urlParams.set("description", problemDescription);
         urlParams.set("date", selectedDate);
@@ -266,6 +293,7 @@
         const sendData = {
           orderNumber: orderNum,
           issue: selectedIssue,
+          email: emailValue,
           items: selectedItems,
           description: problemDescription,
           date: selectedDate,
@@ -278,6 +306,7 @@
         let data = JSON.stringify(sendData);
         // Hide form
         document.getElementById("orderNumber").setAttribute("type", "hidden");
+        document.getElementById("email").hidden = true;
         document.getElementById("issue").hidden = true;
         document.getElementById("itemCheckboxGroup").hidden = true;
         document.getElementById("datePicker").hidden = true;
@@ -286,6 +315,7 @@
 
         // Show results
         document.getElementById("rOrderNumber").innerHTML = sendData.orderNumber;
+        document.getElementById("remail").innerHTML = sendData.email;
         document.getElementById("rIssue").innerHTML = sendData.issue;
         document.getElementById("rItems").innerHTML = sendData.items.join(", ");
         document.getElementById("rDate").innerHTML = sendData.date;
